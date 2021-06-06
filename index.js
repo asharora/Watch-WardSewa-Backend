@@ -4,7 +4,7 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const movieRouter = require('./router')
 const app = express()
-const apiPort = 10003
+const apiPort = 6000
 
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(cors())
@@ -17,9 +17,6 @@ mongodb.connect(db,{ useNewUrlParser: true ,useUnifiedTopology:true}).then((val)
  console.log("successfull");
 }).catch((err)=>{console.log(err)});
 
-app.get('/', (req, res) => {
-    res.send('Hello World!')
-})
 
 app.use('/api', movieRouter)
 
