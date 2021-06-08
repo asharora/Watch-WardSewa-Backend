@@ -1,13 +1,19 @@
-const Duty = require('./model')
+const Duty = require('./Models/DutySlot')
+const DutyHeader=require('./Models/DutyHeader')
 
 getSlot = (req, res) => {
     
    Duty
         .find({})
-        .then((val) => {
+        .then((val1) => {
+            
+            DutyHeader
+        .find({})
+        .then((val2) => {
             return res.status(201).json({
                 success: true,
-                data:val,
+                data:val1,
+                header:val2[0],
                 message: 'Data Fetched Successfully!',
             })
         })
@@ -17,89 +23,68 @@ getSlot = (req, res) => {
                 message: 'Data Not created!',
             })
         })
+            // return res.status(201).json({
+            //     success: true,
+            //     data:val,
+            //     message: 'Data Fetched Successfully!',
+            // })
+        })
+        .catch(error => {
+            return res.status(400).json({
+                error,
+                message: 'Data Not created!',
+            })
+        })
 }
 
-// bookSlot = async (req, res) => {
-//     const body = req.body
-//     const name=body["name"];
-//     const myDate=body["date"];
+bookHeader = async (req, res) => {
+    const body = req.body
     
-    
-//     var val=await Duty.find({sewadars: { $in: [name] }})
-//     console.log(val);
-//    if(val.length!=0){
-//         return res.status(200).json({
-//             success:false,
-//             message: 'Sewa Already Booked for this Name',
-//         });
-//     }
-//    console.log(val);
-    
-//    Duty.findOne({ date: myDate}, (err, duty) => {
-//         if (err) {
-//             return res.status(404).json({
-//                 err,
-//                 message: 'Data Not Found!!',
-//             })
-//         }
+    await DutyHeader.deleteMany({}).then(function(){
+        console.log("Data deleted"); // Success
+    }).catch(function(error){
+    return res.status(400).json({ success: false, error: err })
 
-//         var arr=[];
-//         for(var i=0;i<duty.sewadars.length;i++){
-//             arr.push(duty.sewadars[i]);
-//         }
+    }); 
 
-//         var allBooked=true;
-//         for(var i=0;i<duty.sewadars.length;i++){
-//             if(arr[i]==''){
-//                 arr[i]=name;
-//                 allBooked=false;
-//                 break;
-//             }
-//         }
-        
-//         if(allBooked){
-//             return res.status(200).json({
-//                 success:false,
-//                 message: 'All Slots Booked at '+myDate,
-//             });
-//         }
+await DutyHeader.collection.insert(
+        body, function (err, docs) {
+            if (err){ 
+             return res.status(400).json({ success: false, error: err })
 
-//         duty.sewadars=arr;
-//         duty
-//             .save()
-//             .then(() => {
-//                 return res.status(200).json({
-//                     success: true,
-//                     message: 'Slot Booked Successfully!',
-//                 })
-//             })
-//             .catch(error => {
-//                 return res.status(404).json({
-//                     error,
-//                     message: 'Slot Not Booked !!',
-//                 })
-//             })
-//     })
-// }
+            }  else {
+            console.log("Multiple documents inserted to Collection");
+            }
+    });
+
+    return res.status(200).json({
+        success:true,
+        message:"Data Added Successfully"
+    })
+
+
+}
+
 
 bookSlot = async (req, res) => {
     const body = req.body
     const name=body["name"];
     const myDate=body["date"];
     const sewadarNumber=body["sewadarNumber"];
-    
+    const sameSewadar=body["sameSewadar"]
+
     var val=await Duty.find({sewadars: { $in: [name] }})
     console.log(val);
-   if(val.length!=0){
+   if(val.length>=sameSewadar){
         return res.status(200).json({
             success:false,
-            message: 'Sewa Already Booked for this Name',
+            message: 'Each Sewadar Can Book '+sameSewadar+" slots",
         });
     }
    console.log(val);
     
    Duty.findOne({ date: myDate}, (err, duty) => {
-        if (err) {
+        if (duty==null || duty.sewadars==null || err ) {
             return res.status(404).json({
                 err,
                 message: 'Data Not Found!!',
@@ -187,6 +172,28 @@ createSlot = async (req, res) => {
         return res.status(400).json({ success: false, error: err })
 
         }); 
+    
+    await DutyHeader.deleteMany({}).then(function(){
+            console.log("Data deleted"); // Success
+        }).catch(function(error){
+        return res.status(400).json({ success: false, error: err })
+
+        }); 
+    
+    await DutyHeader.collection.insert(
+            {
+            "title":"",
+            "subtitle":"",
+            "field1":"",
+            "field2":""
+            }, function (err, docs) {
+                if (err){ 
+                 return res.status(400).json({ success: false, error: err })
+
+                }  else {
+                console.log("Multiple documents inserted to Collection");
+                }
+        });
 
     await Duty.collection.insert(data, function (err, docs) {
             if (err){ 
@@ -242,6 +249,7 @@ saveSlot = async (req, res) => {
 module.exports = {
    getSlot,
    bookSlot,
+   bookHeader,
    createSlot,
    saveSlot 
 }
